@@ -22,6 +22,11 @@ export default function Index() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category>("All");
 
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisMeta, setAnalysisMeta] = useState<{ posts?: any; clusters?: any } | null>(null);
+
   const filtered: TrendTopic[] = useMemo(() => {
     let base = sortedTopics;
     if (category !== "All") base = base.filter((t) => classifyCategory(t.name) === category);
@@ -33,11 +38,6 @@ export default function Index() {
     }
     return base;
   }, [sortedTopics, query, category]);
-
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [analysisMeta, setAnalysisMeta] = useState<{ posts?: any; clusters?: any } | null>(null);
 
   return (
     <div className="space-y-6">
