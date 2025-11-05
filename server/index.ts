@@ -22,6 +22,8 @@ export function createServer() {
 
   // Membit proxy endpoints (mock fallback if no API key)
   app.get("/api/membit/trends", membitTrends);
+  app.post("/api/membit/search-posts", (await import("./routes/membitProxy")).searchPosts);
+  app.post("/api/membit/search-clusters", (await import("./routes/membitProxy")).searchClusters);
 
   return app;
 }
