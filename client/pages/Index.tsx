@@ -136,7 +136,7 @@ export default function Index() {
         </div>
 
         <div className="mt-4">
-          {analysisLoading && <div className="text-sm text-foreground/60">Running analysis…</div>}
+          {analysisLoading && <LoadingSkeleton />}
           {analysisError && <div className="text-sm text-secondary">{analysisError}</div>}
           {analysisResult && (
             <AgentResultCard result={analysisResult} meta={analysisMeta} />
