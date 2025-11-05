@@ -4,6 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { membitTrends } from "./routes/membit";
 import { searchPosts, searchClusters } from "./routes/membitProxy";
+import { runAgent } from "./routes/agent";
 
 export function createServer() {
   const app = express();
