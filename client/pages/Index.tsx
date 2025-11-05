@@ -103,7 +103,7 @@ export default function Index() {
           {analysisLoading && <div className="text-sm text-foreground/60">Running analysis…</div>}
           {analysisError && <div className="text-sm text-secondary">{analysisError}</div>}
           {analysisResult && (
-            <pre className="mt-3 max-h-64 overflow-auto text-xs text-foreground/80 bg-[#070707] p-3 rounded-md border border-cyan-400/10">{typeof analysisResult === 'string' ? analysisResult : JSON.stringify(analysisResult, null, 2)}</pre>
+            <AgentResultCard result={analysisResult} meta={analysisMeta} />
           )}
         </div>
       </div>
