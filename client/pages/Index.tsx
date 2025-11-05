@@ -4,6 +4,7 @@ import TrendStream from "@/components/TrendStream";
 import SentimentChart from "@/components/SentimentChart";
 import CPIGauge from "@/components/CPIGauge";
 import ViralPanel from "@/components/ViralPanel";
+import AgentResultCard from "@/components/AgentResultCard";
 import { useRealTimeTrends } from "@/hooks/useRealTimeTrends";
 import type { TrendTopic } from "@shared/api";
 
