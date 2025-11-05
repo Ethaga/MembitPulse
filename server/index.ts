@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { membitTrends } from "./routes/membit";
+import { searchPosts, searchClusters } from "./routes/membitProxy";
 
 export function createServer() {
   const app = express();
