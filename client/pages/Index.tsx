@@ -155,39 +155,16 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={async () => {
-                try {
-                  setAnalysisLoading(true);
-                  setAnalysisError(null);
-                  setAnalysisResult(null);
-                  const target = query.trim() || filtered[0]?.name || "";
-                  const resp = await fetch('/api/agent/run', {
-                    method: 'POST',
-                    headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ query: target }),
-                  });
-                  const json = await resp.json();
-                  if (!json.ok) {
-                    setAnalysisError(json.error || 'Agent failed');
-                  } else {
-                    const result = json.data || json.raw || json;
-                    setAnalysisResult(result);
-                    setAnalysisMeta({ posts: json.posts, clusters: json.clusters });
-                    // push to history
-                    const score = (result && typeof result === 'object') ? (result.score ?? result?.score) : null;
-                    const action = result?.action ?? null;
-                    pushHistory({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, ts: Date.now(), topic: target, score, action, raw: result });
-                  }
-                } catch (err: any) {
-                  setAnalysisError(err?.message ?? String(err));
-                } finally {
-                  setAnalysisLoading(false);
-                }
+              onClick={() => {
+                const target = query.trim() || filtered[0]?.name || "";
+                tryStartAnalysis(target);
               }}
-              className="px-4 py-2 rounded-xl border border-cyan-400/40 glow-cyan hover:bg-primary/10"
+              disabled={analysisLoading}
+              className="px-4 py-2 rounded-xl border border-cyan-400/40 glow-cyan hover:bg-primary/10 disabled:opacity-50"
             >
               Run Analysis
             </button>
+            <ConfirmModal open={showConfirm} title="Run Viral Analysis" description={pendingTarget ? `Run analysis for: ${pendingTarget}?` : undefined} onConfirm={confirmAndRun} onCancel={() => { setShowConfirm(false); setPendingTarget(null); }} />
           </div>
         </div>
 
