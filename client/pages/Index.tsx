@@ -103,6 +103,7 @@ export default function Index() {
                 try {
                   setAnalysisLoading(true);
                   setAnalysisError(null);
+                  setAnalysisResult(null);
                   const target = query.trim() || filtered[0]?.name || "";
                   const resp = await fetch('/api/agent/run', {
                     method: 'POST',
@@ -113,8 +114,13 @@ export default function Index() {
                   if (!json.ok) {
                     setAnalysisError(json.error || 'Agent failed');
                   } else {
-                    setAnalysisResult(json.data || json.raw || json);
+                    const result = json.data || json.raw || json;
+                    setAnalysisResult(result);
                     setAnalysisMeta({ posts: json.posts, clusters: json.clusters });
+                    // push to history
+                    const score = (result && typeof result === 'object') ? (result.score ?? result?.score) : null;
+                    const action = result?.action ?? null;
+                    pushHistory({ id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, ts: Date.now(), topic: target, score, action, raw: result });
                   }
                 } catch (err: any) {
                   setAnalysisError(err?.message ?? String(err));
@@ -139,7 +145,7 @@ export default function Index() {
       </div>
 
       {loading && (
-        <div className="text-sm text-foreground/60">Loading real-time data���</div>
+        <div className="text-sm text-foreground/60">Loading real-time data…</div>
       )}
       {error && (
         <div className="text-sm text-secondary">Failed to load latest trends. Showing cached/mock data.</div>
