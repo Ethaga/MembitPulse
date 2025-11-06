@@ -28,7 +28,8 @@ export const runAgent: RequestHandler = async (req, res) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${membitKey}`,
+          "X-Membit-Api-Key": membitKey,
+          Accept: "application/json",
         },
         body: JSON.stringify(body),
       });
