@@ -31,5 +31,8 @@ export function createServer() {
   // Agent endpoint (runs Membit queries + LLM prediction)
   app.post("/api/agent/run", runAgent);
 
+  // Proxy to Flowise cloud API for interactive chat
+  app.post("/api/flowise/chat", flowiseChat);
+
   return app;
 }
