@@ -17,11 +17,18 @@ async function callMembit(path: string, body: any) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
+
+  // read body text once and parse
+  const text = await resp.text();
   if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`Membit error ${resp.status}: ${txt}`);
+    throw new Error(`Membit error ${resp.status}: ${text}`);
   }
-  return await resp.json();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // fallback to raw text
+    return text;
+  }
 }
 
 export const searchPosts: RequestHandler = async (req, res) => {
