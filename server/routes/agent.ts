@@ -160,12 +160,18 @@ export const runAgent: RequestHandler = async (req, res) => {
       }),
     });
 
+    const openaiText = await openaiResp.text();
     if (!openaiResp.ok) {
-      const txt = await openaiResp.text();
-      return res.status(502).json({ ok: false, error: `OpenAI error: ${openaiResp.status} ${txt}` });
+      return res.status(502).json({ ok: false, error: `OpenAI error: ${openaiResp.status} ${openaiText}` });
     }
-    const openaiJson = await openaiResp.json();
-    const content = openaiJson?.choices?.[0]?.message?.content;
+    let openaiJson: any = null;
+    try {
+      openaiJson = JSON.parse(openaiText);
+    } catch (e) {
+      // If parsing fails, include raw text
+      openaiJson = null;
+    }
+    const content = openaiJson?.choices?.[0]?.message?.content ?? openaiText;
 
     // Try to parse JSON out of model reply
     let parsed = null;
