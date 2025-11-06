@@ -42,7 +42,7 @@ export default function AgentResultCard({ result, meta }: AgentResultCardProps) 
               {rationale.length > 0 ? (
                 rationale.slice(0,3).map((r, i) => (
                   <div key={i} className="text-xs text-foreground/80 flex items-start gap-2">
-                    <div className="mt-1 text-primary">•</div>
+                    <div className="mt-1 text-primary">���</div>
                     <div>{r}</div>
                   </div>
                 ))
@@ -60,10 +60,12 @@ export default function AgentResultCard({ result, meta }: AgentResultCardProps) 
       </div>
 
       {meta?.posts && (
-        <details className="mt-3 text-xs text-foreground/60">
-          <summary className="cursor-pointer">View source posts (sample)</summary>
-          <pre className="mt-2 max-h-40 overflow-auto p-2 bg-[#070707] rounded-md text-xs text-foreground/80">{JSON.stringify(meta.posts, null, 2)}</pre>
-        </details>
+        <div className="mt-3 text-xs text-foreground/60">
+          <div className="cursor-pointer font-semibold">Interactive Agent</div>
+          <div className="mt-2">
+            <FlowiseChat meta={meta} />
+          </div>
+        </div>
       )}
     </div>
   );
