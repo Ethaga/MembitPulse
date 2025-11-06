@@ -10,5 +10,13 @@
     <div id="root"></div>
 
     <script type="module" src="/client/main.tsx"></script>
+
+    <script type="module">
+        import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+        Chatbot.init({
+            chatflowid: "3ff1758f-69de-402c-ac35-d4d77d80fdcb",
+            apiHost: "https://cloud.flowiseai.com",
+        })
+    </script>
   </body>
 </html>
