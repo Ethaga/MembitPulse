@@ -71,9 +71,15 @@ export default function Index() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ query: target }),
       });
-      const json = await resp.json();
-      if (!json.ok) {
-        setAnalysisError(json.error || 'Agent failed');
+      const text = await resp.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        json = { ok: resp.ok, raw: text };
+      }
+      if (!resp.ok) {
+        setAnalysisError(json.error || `Agent failed: ${resp.status}`);
         return;
       }
       const result = json.data || json.raw || json;
