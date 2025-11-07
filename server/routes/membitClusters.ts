@@ -17,8 +17,13 @@ export const getClustersWithPosts: RequestHandler = async (req, res) => {
     const clustersUrl = 'https://api.membit.ai/v1/clusters/search';
     const postsUrl = 'https://api.membit.ai/v1/posts/search';
 
+    // Fetch clusters — clusters API requires a query parameter 'q'; use 'trending' as default
+    const clustersUrlObj = new URL(clustersUrl);
+    clustersUrlObj.searchParams.set('q', 'trending');
+    clustersUrlObj.searchParams.set('limit', '10');
+
     // Fetch clusters
-    const cResp = await fetch(clustersUrl, {
+    const cResp = await fetch(clustersUrlObj.toString(), {
       method: 'GET',
       headers: { 'X-Membit-Api-Key': apiKey, Accept: 'application/json' },
     });
