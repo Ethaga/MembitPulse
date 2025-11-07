@@ -176,12 +176,17 @@ export const runAgent: RequestHandler = async (req, res) => {
       openaiResp = attempt.resp;
       openaiText = attempt.text;
 
-      if (!openaiResp.ok && openaiResp.status === 429 && initialModel !== "gpt-3.5-turbo") {
-        console.warn('OpenAI rate-limited on model', initialModel, '- retrying with gpt-3.5-turbo');
-        openaiModelUsed = "gpt-3.5-turbo";
-        const retryAttempt = await callOpenAI(openaiModelUsed);
-        openaiResp = retryAttempt.resp;
-        openaiText = retryAttempt.text;
+      // If rate-limited (429) or model unavailable (404 with model error), retry with gpt-3.5-turbo
+      if (initialModel !== "gpt-3.5-turbo") {
+        const textLower = String(openaiText || "").toLowerCase();
+        const modelUnavailable = openaiResp.status === 404 && (/model .*does not exist/.test(textLower) || /do not have access/.test(textLower) || /the model/i.test(textLower));
+        if ((openaiResp.status === 429 || modelUnavailable)) {
+          console.warn('OpenAI error on model', initialModel, 'status', openaiResp.status, '- retrying with gpt-3.5-turbo');
+          openaiModelUsed = "gpt-3.5-turbo";
+          const retryAttempt = await callOpenAI(openaiModelUsed);
+          openaiResp = retryAttempt.resp;
+          openaiText = retryAttempt.text;
+        }
       }
     } catch (e) {
       console.warn('OpenAI fetch error:', e);
