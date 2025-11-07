@@ -24,7 +24,10 @@ function classifyCategory(name: string): Category {
   return "Other";
 }
 
+import { useToast } from "@/hooks/use-toast";
+
 export default function Index() {
+  const { toast } = useToast();
   const { data, sortedTopics, loading, error } = useRealTimeTrends({
     intervalMs: 60000,
     immediate: true,
