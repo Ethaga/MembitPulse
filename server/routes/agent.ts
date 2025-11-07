@@ -166,6 +166,7 @@ export const runAgent: RequestHandler = async (req, res) => {
     }
 
     // Try Flowise first
+    let flowiseErrorText: string | null = null;
     if (flowiseUrl) {
       try {
         const attempt = await callFlowise();
@@ -173,7 +174,8 @@ export const runAgent: RequestHandler = async (req, res) => {
         const flowiseText = attempt.text;
         if (!flowiseResp.ok) {
           console.warn('Flowise returned non-OK:', flowiseResp.status, flowiseText);
-          // proceed to OpenAI fallback
+          flowiseErrorText = flowiseText;
+          // proceed to fallback
         } else {
           // Flowise success — normalize and return
           let parsedFlow: any = null;
@@ -194,7 +196,8 @@ export const runAgent: RequestHandler = async (req, res) => {
           return res.json({ ok: true, data: parsed, raw: content, posts: postsResp, clusters: clustersResp, mcp: mcpResp, flowise_used: true });
         }
       } catch (e) {
-        console.warn('Flowise call failed, falling back to OpenAI:', e);
+        console.warn('Flowise call failed:', e);
+        flowiseErrorText = String(e);
       }
     }
 
