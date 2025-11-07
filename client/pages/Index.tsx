@@ -5,6 +5,7 @@ import SentimentChart from "@/components/SentimentChart";
 import CPIGauge from "@/components/CPIGauge";
 import ViralPanel from "@/components/ViralPanel";
 import AgentResultCard from "@/components/AgentResultCard";
+import FlowiseWidget from "@/components/FlowiseWidget";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
 import AnalysisHistory from "@/components/AnalysisHistory";
 import ConfirmModal from "@/components/ConfirmModal";
