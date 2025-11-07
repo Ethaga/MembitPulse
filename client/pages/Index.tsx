@@ -184,6 +184,9 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Flowise assistant widget below the Run Viral Analysis panel */}
+      <FlowiseWidget meta={analysisMeta} />
+
       {loading && (
         <div className="text-sm text-foreground/60">Loading real-time data…</div>
       )}
