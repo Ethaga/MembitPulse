@@ -33,6 +33,7 @@ export function createServer() {
 
   // Proxy to Flowise cloud API for interactive chat
   app.post("/api/flowise/chat", flowiseChat);
+  app.get("/api/flowise/config", flowiseConfig);
 
   return app;
 }
