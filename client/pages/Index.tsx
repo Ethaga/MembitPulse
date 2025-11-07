@@ -23,14 +23,20 @@ function classifyCategory(name: string): Category {
 }
 
 export default function Index() {
-  const { data, sortedTopics, loading, error } = useRealTimeTrends({ intervalMs: 60000, immediate: true });
+  const { data, sortedTopics, loading, error } = useRealTimeTrends({
+    intervalMs: 60000,
+    immediate: true,
+  });
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category>("All");
 
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [analysisMeta, setAnalysisMeta] = useState<{ posts?: any; clusters?: any } | null>(null);
+  const [analysisMeta, setAnalysisMeta] = useState<{
+    posts?: any;
+    clusters?: any;
+  } | null>(null);
 
   const [history, setHistory] = useState<any[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -40,10 +46,10 @@ export default function Index() {
   // load history from localStorage once
   React.useEffect(() => {
     try {
-      const raw = localStorage.getItem('membit_analysis_history');
+      const raw = localStorage.getItem("membit_analysis_history");
       if (raw) setHistory(JSON.parse(raw));
     } catch (e) {
-      console.warn('Failed to load history', e);
+      console.warn("Failed to load history", e);
     }
   }, []);
 
@@ -51,15 +57,17 @@ export default function Index() {
     const next = [item, ...history].slice(0, 20);
     setHistory(next);
     try {
-      localStorage.setItem('membit_analysis_history', JSON.stringify(next));
+      localStorage.setItem("membit_analysis_history", JSON.stringify(next));
     } catch (e) {
-      console.warn('Failed to save history', e);
+      console.warn("Failed to save history", e);
     }
   };
 
   const clearHistory = () => {
     setHistory([]);
-    try { localStorage.removeItem('membit_analysis_history'); } catch {}
+    try {
+      localStorage.removeItem("membit_analysis_history");
+    } catch {}
   };
 
   async function runAnalysis(target: string) {
@@ -67,9 +75,9 @@ export default function Index() {
     setAnalysisError(null);
     setAnalysisResult(null);
     try {
-      const resp = await fetch('/api/agent/run', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const resp = await fetch("/api/agent/run", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ query: target }),
       });
       const text = await resp.text();
@@ -86,9 +94,19 @@ export default function Index() {
       const result = json.data || json.raw || json;
       setAnalysisResult(result);
       setAnalysisMeta({ posts: json.posts, clusters: json.clusters });
-      const score = (result && typeof result === 'object') ? (result.score ?? result?.score) : null;
+      const score =
+        result && typeof result === "object"
+          ? (result.score ?? result?.score)
+          : null;
       const action = result?.action ?? null;
-      const histItem = { id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`, ts: Date.now(), topic: target, score, action, raw: result };
+      const histItem = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        ts: Date.now(),
+        topic: target,
+        score,
+        action,
+        raw: result,
+      };
       pushHistory(histItem);
       setLastRunTs(Date.now());
     } catch (err: any) {
@@ -103,7 +121,9 @@ export default function Index() {
     const diff = now - lastRunTs;
     const LIMIT_MS = 15000; // 15s
     if (diff < LIMIT_MS) {
-      setAnalysisError(`Rate limit: please wait ${Math.ceil((LIMIT_MS - diff)/1000)}s before next analysis`);
+      setAnalysisError(
+        `Rate limit: please wait ${Math.ceil((LIMIT_MS - diff) / 1000)}s before next analysis`,
+      );
       return;
     }
     setPendingTarget(target);
@@ -122,11 +142,14 @@ export default function Index() {
 
   const filtered: TrendTopic[] = useMemo(() => {
     let base = sortedTopics;
-    if (category !== "All") base = base.filter((t) => classifyCategory(t.name) === category);
+    if (category !== "All")
+      base = base.filter((t) => classifyCategory(t.name) === category);
     if (query.trim()) {
       const q = query.trim().toLowerCase();
-      base = base.filter((t) =>
-        t.name.toLowerCase().includes(q) || t.keywords.some((k) => k.toLowerCase().includes(q)),
+      base = base.filter(
+        (t) =>
+          t.name.toLowerCase().includes(q) ||
+          t.keywords.some((k) => k.toLowerCase().includes(q)),
       );
     }
     return base;
@@ -135,11 +158,20 @@ export default function Index() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <div className="text-xs uppercase tracking-[0.3em] text-foreground/60">Project: Membit Pulse — Cypherpunk Edition</div>
-        <h1 className="text-2xl md:text-3xl font-extrabold glow-cyan">AI Dashboard for Real-Time Trends</h1>
+        <div className="text-xs uppercase tracking-[0.3em] text-foreground/60">
+          Project: Membit Pulse — Cypherpunk Edition
+        </div>
+        <h1 className="text-2xl md:text-3xl font-extrabold glow-cyan">
+          AI Dashboard for Real-Time Trends
+        </h1>
       </div>
 
-      <Filters query={query} category={category} onQueryChange={setQuery} onCategoryChange={setCategory} />
+      <Filters
+        query={query}
+        category={category}
+        onQueryChange={setQuery}
+        onCategoryChange={setCategory}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -148,7 +180,16 @@ export default function Index() {
         <div className="lg:col-span-1 space-y-6">
           {data && <CPIGauge value={data.cpi.cpi} />}
           {data && <SentimentChart data={data.sentiment} />}
-          <AnalysisHistory items={history.map(h => ({ id: h.id, ts: h.ts, topic: h.topic, score: h.score, action: h.action }))} onClear={clearHistory} />
+          <AnalysisHistory
+            items={history.map((h) => ({
+              id: h.id,
+              ts: h.ts,
+              topic: h.topic,
+              score: h.score,
+              action: h.action,
+            }))}
+            onClear={clearHistory}
+          />
         </div>
       </div>
 
@@ -157,8 +198,12 @@ export default function Index() {
       <div className="rounded-2xl border border-cyan-400/30 bg-[#0f0f0f]/80 neon-border p-4">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-sm tracking-wide text-foreground/70">Run Viral Analysis</div>
-            <div className="text-xs text-foreground/60">Analyze a topic using Membit data + LLM prediction</div>
+            <div className="text-sm tracking-wide text-foreground/70">
+              Run Viral Analysis
+            </div>
+            <div className="text-xs text-foreground/60">
+              Analyze a topic using Membit data + LLM prediction
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -171,13 +216,28 @@ export default function Index() {
             >
               Run Analysis
             </button>
-            <ConfirmModal open={showConfirm} title="Run Viral Analysis" description={pendingTarget ? `Run analysis for: ${pendingTarget}?` : undefined} onConfirm={confirmAndRun} onCancel={() => { setShowConfirm(false); setPendingTarget(null); }} />
+            <ConfirmModal
+              open={showConfirm}
+              title="Run Viral Analysis"
+              description={
+                pendingTarget
+                  ? `Run analysis for: ${pendingTarget}?`
+                  : undefined
+              }
+              onConfirm={confirmAndRun}
+              onCancel={() => {
+                setShowConfirm(false);
+                setPendingTarget(null);
+              }}
+            />
           </div>
         </div>
 
         <div className="mt-4">
           {analysisLoading && <LoadingSkeleton />}
-          {analysisError && <div className="text-sm text-secondary">{analysisError}</div>}
+          {analysisError && (
+            <div className="text-sm text-secondary">{analysisError}</div>
+          )}
           {analysisResult && (
             <AgentResultCard result={analysisResult} meta={analysisMeta} />
           )}
@@ -188,10 +248,14 @@ export default function Index() {
       <FlowiseWidget meta={analysisMeta} />
 
       {loading && (
-        <div className="text-sm text-foreground/60">Loading real-time data…</div>
+        <div className="text-sm text-foreground/60">
+          Loading real-time data…
+        </div>
       )}
       {error && (
-        <div className="text-sm text-secondary">Failed to load latest trends. Showing cached/mock data.</div>
+        <div className="text-sm text-secondary">
+          Failed to load latest trends. Showing cached/mock data.
+        </div>
       )}
     </div>
   );
