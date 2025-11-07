@@ -86,7 +86,7 @@ export const membitTrends: RequestHandler = async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           'X-Membit-Api-Key': apiKey ?? '',
-          Accept: 'application/json',
+          Accept: 'application/json, text/event-stream',
         },
         body: JSON.stringify(body),
       });
