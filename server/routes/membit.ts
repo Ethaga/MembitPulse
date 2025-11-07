@@ -75,24 +75,71 @@ function computeCPI(topics: TrendTopic[]): CPIResponse {
 export const membitTrends: RequestHandler = async (req, res) => {
   try {
     const apiKey = process.env.MEMBIT_API_KEY;
+    const mcpUrl = process.env.MEMBIT_MCP_URL;
+
+    if (mcpUrl) {
+      // Call remote MCP for consolidated trends
+      const endpoint = mcpUrl;
+      const body = { action: 'trends', features: ['trends', 'sentiment', 'volume', 'engagement'], limit: 50 };
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Membit-Api-Key': apiKey ?? '',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      const text = await resp.text();
+      if (!resp.ok) {
+        console.error('/api/membit/trends MCP error', resp.status, text);
+        return res.status(502).json({ error: `MCP error ${resp.status}: ${text}` });
+      }
+      let json: any = null;
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        console.error('/api/membit/trends MCP parse error', e, text);
+        return res.status(502).json({ error: 'Invalid JSON from MCP', raw: text });
+      }
+      const rawTopics = json.topics ?? json.results ?? json.data ?? json.items ?? json;
+      if (!Array.isArray(rawTopics)) {
+        console.error('/api/membit/trends MCP unexpected shape', rawTopics);
+        return res.status(502).json({ error: 'Unexpected MCP response shape', raw: rawTopics });
+      }
+
+      const topics: TrendTopic[] = rawTopics.map((t: any, i: number) => ({
+        id: t.id ?? t.name ?? `topic-${i}`,
+        name: t.name ?? t.title ?? (typeof t === 'string' ? t : `topic-${i}`),
+        mentions: t.mentions ?? t.metric ?? t.volume ?? 0,
+        growth24h: t.growth24h ?? t.change24h ?? t.growth ?? 0,
+        sentiment: typeof t.sentiment === 'number' ? t.sentiment : (t.sent ?? 0),
+        keywords: Array.isArray(t.keywords) ? t.keywords : (t.tags ?? []).slice(0, 6),
+        spark: Array.isArray(t.spark) ? t.spark : (t.series ?? []).slice(0, 16).map((v: any) => Number(v) || 0),
+        viralScore: t.viralScore ?? t.score ?? 0,
+      }));
+
+      const sentiment = computeSentiment(topics);
+      const cpi = computeCPI(topics);
+      return res.status(200).json({ topics, sentiment, cpi, ts: Date.now(), mcp: json });
+    }
+
     if (!apiKey) {
       console.error('/api/membit/trends error: MEMBIT_API_KEY not configured');
       return res.status(500).json({ error: 'MEMBIT_API_KEY not configured on server' });
     }
 
-    // Prefer calling direct Membit REST API for trends
+    // Direct REST fallback
     const url = 'https://api.membit.ai/v1/trends';
     const resp = await fetch(url, {
       method: 'GET',
       headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
     });
-
     const text = await resp.text();
     if (!resp.ok) {
       console.error('/api/membit/trends remote error', resp.status, text);
       return res.status(502).json({ error: `Membit API error ${resp.status}: ${text}` });
     }
-
     let json: any = null;
     try {
       json = JSON.parse(text);
@@ -101,14 +148,12 @@ export const membitTrends: RequestHandler = async (req, res) => {
       return res.status(502).json({ error: 'Invalid JSON from Membit API', raw: text });
     }
 
-    // Expecting either json.topics or json.results or json.data
     const rawTopics = json.topics ?? json.results ?? json.data ?? json;
     if (!Array.isArray(rawTopics)) {
       console.error('/api/membit/trends unexpected response shape', rawTopics);
       return res.status(502).json({ error: 'Unexpected response from Membit API', raw: rawTopics });
     }
 
-    // Map raw topics to TrendTopic shape if needed
     const topics: TrendTopic[] = rawTopics.map((t: any, i: number) => ({
       id: t.id ?? t.name ?? `topic-${i}`,
       name: t.name ?? t.title ?? (typeof t === 'string' ? t : `topic-${i}`),
