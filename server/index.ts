@@ -36,5 +36,8 @@ export function createServer() {
   app.post("/api/flowise/chat", flowiseChat);
   app.get("/api/flowise/config", flowiseConfig);
 
+  // Membit clusters + posts
+  app.get("/api/membit/clusters", getClustersWithPosts);
+
   return app;
 }
