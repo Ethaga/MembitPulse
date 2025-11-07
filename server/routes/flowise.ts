@@ -35,30 +35,46 @@ export const flowiseChat: RequestHandler = async (req, res) => {
       ? baseUrl
       : `${baseUrl}/prediction`;
 
-    const headers: Record<string, string> = {
+    const baseHeaders: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    if (key) {
-      headers["Authorization"] = `Bearer ${key}`;
+
+    async function doFetch(useXApiKey: boolean) {
+      const headers: Record<string, string> = { ...baseHeaders };
+      if (key) {
+        if (useXApiKey) headers["x-api-key"] = key;
+        else headers["Authorization"] = `Bearer ${key}`;
+      }
+      const r = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(payload),
+      });
+      const txt = await r.text();
+      return { r, txt };
     }
 
-    const resp = await fetch(endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(payload),
-    });
-
-    const text = await resp.text();
-    if (!resp.ok) {
-      return res
-        .status(resp.status)
-        .json({ error: `Flowise error ${resp.status}: ${text}` });
+    // Try Authorization: Bearer first, then fallback to x-api-key if unauthorized
+    let result = await doFetch(false);
+    if (!result.r.ok) {
+      const status = result.r.status;
+      const bodyText = result.txt || "";
+      const isUnauthorized = status === 401 || /unauthori/i.test(bodyText);
+      if (isUnauthorized && key) {
+        // retry with x-api-key
+        result = await doFetch(true);
+      }
     }
+
+    if (!result.r.ok) {
+      return res.status(result.r.status).json({ error: `Flowise error ${result.r.status}: ${result.txt}` });
+    }
+
     try {
-      const json = JSON.parse(text);
+      const json = JSON.parse(result.txt);
       return res.json(json);
     } catch (e) {
-      return res.send(text);
+      return res.send(result.txt);
     }
   } catch (err: any) {
     console.error("/api/flowise/chat error", err?.message ?? err);
