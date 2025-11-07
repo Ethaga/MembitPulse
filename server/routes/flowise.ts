@@ -35,46 +35,30 @@ export const flowiseChat: RequestHandler = async (req, res) => {
       ? baseUrl
       : `${baseUrl}/prediction`;
 
-    const baseHeaders: Record<string, string> = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-
-    async function doFetch(useXApiKey: boolean) {
-      const headers: Record<string, string> = { ...baseHeaders };
-      if (key) {
-        if (useXApiKey) headers["x-api-key"] = key;
-        else headers["Authorization"] = `Bearer ${key}`;
-      }
-      const r = await fetch(endpoint, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-      });
-      const txt = await r.text();
-      return { r, txt };
+    if (key) {
+      // Send both Authorization and x-api-key to accommodate different Flowise deployments
+      headers["Authorization"] = `Bearer ${key}`;
+      headers["x-api-key"] = key;
     }
 
-    // Try Authorization: Bearer first, then fallback to x-api-key if unauthorized
-    let result = await doFetch(false);
-    if (!result.r.ok) {
-      const status = result.r.status;
-      const bodyText = result.txt || "";
-      const isUnauthorized = status === 401 || /unauthori/i.test(bodyText);
-      if (isUnauthorized && key) {
-        // retry with x-api-key
-        result = await doFetch(true);
-      }
-    }
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
 
-    if (!result.r.ok) {
-      return res.status(result.r.status).json({ error: `Flowise error ${result.r.status}: ${result.txt}` });
+    const text = await resp.text();
+    if (!resp.ok) {
+      return res.status(resp.status).json({ error: `Flowise error ${resp.status}: ${text}` });
     }
-
     try {
-      const json = JSON.parse(result.txt);
+      const json = JSON.parse(text);
       return res.json(json);
     } catch (e) {
-      return res.send(result.txt);
+      return res.send(text);
     }
   } catch (err: any) {
     console.error("/api/flowise/chat error", err?.message ?? err);
