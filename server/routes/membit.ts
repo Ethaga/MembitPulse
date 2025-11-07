@@ -78,9 +78,15 @@ export const membitTrends: RequestHandler = async (req, res) => {
     const mcpUrl = process.env.MEMBIT_MCP_URL;
 
     if (mcpUrl) {
-      // Call remote MCP for consolidated trends
+      // Call remote MCP for consolidated trends using JSON-RPC envelope expected by MCP
       const endpoint = mcpUrl;
-      const body = { action: 'trends', features: ['trends', 'sentiment', 'volume', 'engagement'], limit: 50 };
+      const rpcBody = {
+        jsonrpc: "2.0",
+        id: `membit-trends-${Date.now()}`,
+        method: "trends",
+        params: { features: ["trends", "sentiment", "volume", "engagement"], limit: 50 },
+      };
+
       const resp = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -88,8 +94,9 @@ export const membitTrends: RequestHandler = async (req, res) => {
           'X-Membit-Api-Key': apiKey ?? '',
           Accept: 'application/json, text/event-stream',
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(rpcBody),
       });
+
       const text = await resp.text();
       if (!resp.ok) {
         console.error('/api/membit/trends MCP error', resp.status, text);
@@ -102,7 +109,10 @@ export const membitTrends: RequestHandler = async (req, res) => {
         console.error('/api/membit/trends MCP parse error', e, text);
         return res.status(502).json({ error: 'Invalid JSON from MCP', raw: text });
       }
-      const rawTopics = json.topics ?? json.results ?? json.data ?? json.items ?? json;
+
+      // JSON-RPC responses typically have a 'result' field
+      const rpcResult = json?.result ?? json;
+      const rawTopics = rpcResult.topics ?? rpcResult.results ?? rpcResult.data ?? rpcResult.items ?? rpcResult;
       if (!Array.isArray(rawTopics)) {
         console.error('/api/membit/trends MCP unexpected shape', rawTopics);
         return res.status(502).json({ error: 'Unexpected MCP response shape', raw: rawTopics });
