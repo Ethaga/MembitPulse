@@ -110,6 +110,8 @@ export const membitTrends: RequestHandler = async (req, res) => {
       let lastError: any = null;
       for (const body of candidateBodies) {
         try {
+          let attemptParsed: any = null;
+
           const resp = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -124,28 +126,28 @@ export const membitTrends: RequestHandler = async (req, res) => {
           if (!resp.ok) {
             // capture error and try next
             lastError = { status: resp.status, text };
-            // try next candidate
             continue;
           }
 
-          // parse SSE or JSON
+          // parse SSE or JSON into a temporary variable to avoid reusing an error payload
           if (typeof text === 'string' && text.trim().startsWith('event:')) {
             const lines = text.split(/\r?\n/);
             const dataLines = lines.filter((l) => l.startsWith('data:'));
             if (dataLines.length === 0) throw new Error('No data lines in SSE');
             const lastData = dataLines[dataLines.length - 1].replace(/^data:\s*/, '');
-            parsed = JSON.parse(lastData);
+            attemptParsed = JSON.parse(lastData);
           } else {
-            parsed = JSON.parse(text);
+            attemptParsed = JSON.parse(text);
           }
 
-          // if parsed contains error, capture and try next
-          if (parsed?.error) {
-            lastError = { status: 502, text: JSON.stringify(parsed) };
+          // if attemptParsed contains error, capture and try next
+          if (attemptParsed?.error) {
+            lastError = { status: 502, text: JSON.stringify(attemptParsed) };
             continue;
           }
 
           // success
+          parsed = attemptParsed;
           break;
         } catch (e) {
           lastError = e;
