@@ -7,12 +7,22 @@ export default function TrendingClusters() {
 
   useEffect(() => {
     let mounted = true;
-    const controller = new AbortController();
+    function fetchWithTimeout(url: string, options: any = {}, ms = 10000) {
+      const ctrl = new AbortController();
+      const id = setTimeout(() => ctrl.abort(), ms);
+      return fetch(url, { ...options, signal: ctrl.signal })
+        .catch((e) => {
+          if (e && e.name === 'AbortError') throw new Error('Request timed out');
+          throw e;
+        })
+        .finally(() => clearTimeout(id));
+    }
+
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        const resp = await fetch("/api/membit/clusters", { signal: controller.signal, headers: { accept: 'application/json' } });
+        const resp = await fetchWithTimeout("/api/membit/clusters", { headers: { accept: 'application/json' } }, 10000);
         const text = await resp.text();
         if (!resp.ok) {
           setError(`Membit API error ${resp.status}: ${text}`);
@@ -24,7 +34,8 @@ export default function TrendingClusters() {
         if (!mounted) return;
         setClusters(Array.isArray(json.clusters) ? json.clusters : []);
       } catch (err: any) {
-        if (err?.name === 'AbortError') return;
+        const msg = err?.message ?? String(err);
+        if (msg === 'Request timed out') return;
         setError(String(err?.message ?? err));
         setClusters([]);
       } finally {
