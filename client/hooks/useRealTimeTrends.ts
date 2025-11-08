@@ -22,14 +22,16 @@ export function useRealTimeTrends(opts: UseRealTimeTrendsOptions = {}) {
     try {
       // cleanup previous controller
       if (controllerRef.current) {
-        try { controllerRef.current.abort(); } catch {}
+        try {
+          controllerRef.current.abort();
+        } catch {}
       }
       const controller = new AbortController();
       controllerRef.current = controller;
       const d = await fetchTrends(controller.signal);
       setData(d);
     } catch (e) {
-      if ((e as any)?.name === 'AbortError') return;
+      if ((e as any)?.name === "AbortError") return;
       setError(e as Error);
     } finally {
       setLoading(false);
@@ -42,7 +44,9 @@ export function useRealTimeTrends(opts: UseRealTimeTrendsOptions = {}) {
     return () => {
       if (timerRef.current) window.clearInterval(timerRef.current);
       if (controllerRef.current) {
-        try { controllerRef.current.abort(); } catch {}
+        try {
+          controllerRef.current.abort();
+        } catch {}
       }
     };
   }, [intervalMs, immediate, load]);
