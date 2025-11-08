@@ -149,7 +149,7 @@ export default function Index() {
       pushHistory(histItem);
       setLastRunTs(Date.now());
     } catch (err: any) {
-      const isAbort = err?.name === "AbortError";
+      const isAbort = err?.name === "AbortError" || err?.message === 'Request timed out';
       const msg = isAbort ? "Request timed out" : (err?.message ?? String(err));
       if (!isAbort) console.error("runAnalysis error", err);
       if (
