@@ -1,7 +1,10 @@
 [build]
-  command = "npm run build"
+  command = "pnpm run build"
   functions = "netlify/functions"
   publish = "dist/spa"
+
+[build.environment]
+  NPM_FLAGS = "--shamefully-hoist"
 
 [functions]
   external_node_modules = ["express", "serverless-http"]
