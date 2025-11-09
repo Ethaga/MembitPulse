@@ -34,9 +34,15 @@ MembitPulse is an application that combines real-time data analysis from Membit 
 - Analyze social and media patterns
 - Generate insight summaries and predictions using AI agents
 
+---
+
 🌐 Live demo:
 👉 https://membitpunk.netlify.app/
+---
 💻 GitHub:
 👉 https://github.com/Ethaga/membitpulse
+---
+Demo Video: 
+👉 https://youtu.be/p5yglTgliBE
 
 
